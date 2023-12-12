@@ -69,17 +69,17 @@ typeof ctx (If e1 e2 e3) = case typeof ctx e1 of
                                                                      else 
                                                                        Nothing
                                          _                        -> Nothing
-                         _          -> Nothing
-                     
-typeof ctx (Head e1 e2 e3) = case typeof ctx e1 of
-    Just t -> Just t
-    _              -> Nothing
+                         _          -> Nothing                   
+typeof ctx (List e) = case checkListElements ctx e of
+                          Just elementType -> Just (TList elementType)
+                          _                -> Nothing
+typeof ctx (Head e) = case typeof ctx e of
+                      Just (TList t) -> Just t
+                      _              -> Nothing
 
-
-typeof ctx (Tail e1 e2 e3) = case (typeof ctx e2, typeof ctx e3) of
-    (Just t1, Just t2) -> Just t2
-    _ -> Nothing
-    
+typeof ctx (Tail e) = case typeof ctx e of
+                      Just (TList t) -> Just (TList t)
+                      _              -> Nothing
 typeof ctx (Paren e) = typeof ctx e
 typeof ctx (Var x) = lookup x ctx 
 typeof ctx (Lam v t1 b) = let ctx' = (v, t1):ctx 
@@ -100,3 +100,10 @@ typecheck :: Expr -> Expr
 typecheck e = case typeof [] e of 
                 Just _ -> e 
                 _      -> error "Type error!"
+
+checkListElements :: Ctx -> [Expr] -> Maybe Ty
+checkListElements ctx (e:es) = case typeof ctx e of
+                              Just t -> if all ((== Just t) . typeof ctx) es
+                                        then Just t
+                                        else Nothing
+                              _      -> Nothing

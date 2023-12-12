@@ -28,13 +28,12 @@ import Lexer
     if          { TokenIf }
     then        { TokenThen }
     else        { TokenElse }
---    while       { TokenWhile }
- --   do          { TokenDo }
     '['         { TokenLBracket }
     ']'         { TokenRBracket }
     ','         { TokenComma }
-    head         { TokenHead }
-    tail         { TokenTail }
+    List        { TokenList }
+    head        { TokenHead }
+    tail        { TokenTail }
     var         { TokenVar $$ }
     '\\'        { TokenLam }
     "->"        { TokenArrow }
@@ -73,13 +72,17 @@ Exp         : num                           { Num $1 }
             | Exp Exp                       { App $1 $2 }
             | '(' Exp ')'                   { Paren $2 }
             | let var '=' Exp in Exp        { Let $2 $4 $6 }
-            | head '[' Exp ',' Exp ',' Exp ']'  { Head $3 $5 $7 }
-            | tail '[' Exp ',' Exp ',' Exp ']'  { Tail $3 $5 $7 }
+            | '[' ExpList ']'               { List $2 }
+            | head Exp                      { Head $2 }
+            | tail Exp                      { Tail $2 }
+
+ExpList     : Exp                                     { [$1] }
+            | Exp ',' ExpList                         { $1 : $3 }
 
 Type    : Bool                              { TBool }
         | Num                               { TNum }
         | '(' Type "->" Type ')'            { TFun $2 $4 }
-        | '[' Type ',' ']'                  { TList $2 }
+        | List '[' Type ']'                 { TList $3 }
 
 
 {

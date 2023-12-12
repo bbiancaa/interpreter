@@ -30,10 +30,9 @@ subst x n (LessThan e1 e2) = LessThan (subst x n e1) (subst x n e2)
 subst x n (LessOrEqual e1 e2) = LessOrEqual (subst x n e1) (subst x n e2)
 subst x n (Equal e1 e2) = Equal (subst x n e1) (subst x n e2)
 subst x n (If e1 e2 e3) = If (subst x n e1) (subst x n e2) (subst x n e3)
-subst x n (Head e1 e2 e3) = Head (subst x n e1) (subst x n e2) (subst x n e3)
-subst x n (Tail e1 e2 e3) = Tail (subst x n e1) (subst x n e2) (subst x n e3)
-subst x n (TailPrint (e1, e2)) = TailPrint (subst x n e1, subst x n e2)
--- subst x n (While e1 e2) = While (subst x n e1) (subst x n e2)
+--subst x n (Head e1 e2 e3) = Head (subst x n e1) (subst x n e2) (subst x n e3)
+--subst x n (Tail e1 e2 e3) = Tail (subst x n e1) (subst x n e2) (subst x n e3)
+subst x n (List es) = List (map (subst x n) es)
 subst x n (Paren e) = Paren (subst x n e)
 subst x n (Let v e1 e2) = Let v (subst x n e1) (subst x n e2)
 subst x n e = e 
@@ -78,7 +77,6 @@ step (LessThan e1 e2) | isValue e1 && isValue e2 = case (e1, e2) of
                           (BFalse, BTrue) -> BTrue
                           (BFalse, BFalse) -> BFalse
                           (Num n1, Num n2) -> if n1 < n2 then BTrue else BFalse
-
 step (LessOrEqual e1 e2) | isValue e1 && isValue e2 = case (e1, e2) of
                           (BTrue, BTrue) -> BFalse
                           (BTrue, BFalse) -> BFalse
@@ -92,15 +90,10 @@ step (Equal e1 e2) | isValue e1 && isValue e2 = case (e1, e2) of
 step (If BFalse e1 e2) = e2 
 step (If BTrue e1 e2) = e1 
 step (If e e1 e2) = If (step e) e1 e2
-
-step (Head e1 e2 e3) | isValue e1 = case e1 of
-                    (Num _) -> e1
-                    _ -> e1
-
-step (Tail e1 e2 e3) | isValue e1 && isValue e2 && isValue e3 = case (e1, e2, e3) of
-  (Num n1, Num n2, Num n3) -> TailPrint (Num n2, Num n3)
-  _ -> TailPrint (e2, e3)
---step (TailPrint (e2 ,e3)) = TailPrint  (e2, e3)
+step (Head (List (x:_))) = x
+step (Head e) = Head (step e)
+step (Tail (List (_:xs))) = List xs
+step (Tail e) = Tail (step e)
 step (Paren e) = e
 step (App (Lam x t b) e2) | isValue e2 = subst x e2 b 
                         | otherwise = (App (Lam x t b) (step e2))
@@ -110,5 +103,6 @@ step (Let v e1 e2) | isValue e1 = subst v e1 e2
 step e = error (show e)
 
 eval :: Expr -> Expr 
+eval (List es) = List (map eval es)
 eval e | isValue e = e 
        | otherwise = eval (step e)

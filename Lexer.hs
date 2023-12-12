@@ -24,15 +24,15 @@ data Expr = BTrue
           | Paren Expr
           | Let String Expr Expr 
          -- | While Int Expr
-         | Head Expr Expr Expr
-         | Tail Expr Expr Expr
-         | TailPrint (Expr, Expr)
+          | List [Expr]
+          | Head Expr
+          | Tail Expr
           deriving Show
 
 data Ty = TBool 
         | TNum 
         | TFun Ty Ty
-        | TList Ty -- Adicione esta linha para incluir TList
+        | TList Ty 
         deriving (Show, Eq)
 
 data Token = TokenTrue 
@@ -64,13 +64,12 @@ data Token = TokenTrue
            | TokenColon
            | TokenBoolean 
            | TokenNumber
-           | TokenHead
-           | TokenTail
            | TokenRBracket
            | TokenLBracket
            | TokenComma
-         --  | TokenWhile
-         --  | TokenDo
+           | TokenList
+           | TokenHead 
+           | TokenTail
            deriving (Show, Eq)
 
 isSymb :: Char -> Bool 
@@ -120,10 +119,9 @@ lexKW cs = case span isAlpha cs of
              ("if", rest) -> TokenIf : lexer rest 
              ("then", rest) -> TokenThen : lexer rest 
              ("else", rest) -> TokenElse : lexer rest 
-             ("head", rest) -> TokenHead : lexer rest 
+             ("List", rest) -> TokenList : lexer rest 
+             ("head", rest) -> TokenHead : lexer rest
              ("tail", rest) -> TokenTail : lexer rest 
-          --   ("while", rest) -> TokenWhile : lexer rest
-           --  ("do", rest) -> TokenDo : lexer rest
              ("let", rest) -> TokenLet : lexer rest 
              ("in", rest) -> TokenIn : lexer rest 
              ("Num", rest) -> TokenNumber : lexer rest 
